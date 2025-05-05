@@ -1,0 +1,11 @@
+# Incluir no pacote
+include README.md
+include LICENSE
+include requirements.txt
+include Procura_B8.spec
+include version.rc 
+include logo.png
+include logo.ico
+
+# Inclui todos os arquivos no diretório codigo_fonte/ com a extensão .py
+recursive-include codigo_fonte *.py
