@@ -19,7 +19,7 @@ VSVersionInfo(
                  StringStruct(u'InternalName', u'Procura_B8'),
                  StringStruct(u'LegalCopyright', u'© 2025 - BUZIOS/PPO/IPO/IEEI'),
                  StringStruct(u'ProductName', u'Procura_B8.exe'),
-                 StringStruct(u'ProductVersion', u'0.01')])
+                 StringStruct(u'ProductVersion', u'0.02')])
         ]),
         VarFileInfo([VarStruct(u'Translation', [1033, 1200])])
     ]

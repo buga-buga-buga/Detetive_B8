@@ -1,22 +1,62 @@
+"""
+procura_B8.py
+
+Descrição:
+Este script processa arquivos PDF em um diretório, buscando materiais de fixação
+proibidos conforme especificacao Petrobras.
+
+Gera relatórios em texto e CSV, além de exibir uma janela com console rolável
+para acompanhamento da execução.
+
+Orientações sobre a entrada:
+- O diretório informado deve conter os arquivos PDF que se queira investigar.
+- Caso nenhum diretório seja informado, será usado o diretório atual.
+- Argumentos opcionais:
+    -d ou --debug : ativa mensagens detalhadas de depuração.
+    -s ou --som   : emite um beep a cada ocorrência de item proibido encontrada.
+
+Sobre a saída:
+- Gera três arquivos no diretório atual:
+    - log_<data_hora>.txt       : log completo da execução.
+    - relatorio_<data_hora>.txt : resumo por arquivo, normas e padrões encontrados.
+    - relatorio_execucao_<data_hora>.csv : planilha com status e detalhes.
+
+Melhorias em versões futuras:
+- Implementar OCR automático para PDFs não pesquisáveis.
+- Barra de progresso na interface gráfica.
+
+Ideias para novas funcionalidades:
+- Opção de rodar em modo silencioso (sem interface gráfica).
+
+Referências:
+       REQUIREMENTS FOR BOLTING MATERIALS -> I-ET-3010.00-1200-251-P4X-001
+Disponivel em:
+       https://canalfornecedor.petrobras.com.br/en/regras-de-contratacao/catalogo-de-padronizacao
+Navegue na pagina por:   
+  FPSO -> Own EEP - Basic Project All Electric 225kbpd / Own EEP - Basic Project for Revitalization -> Static Equipment 
+ou download direto aqui:
+       https://webserver-petrobrasecossistemaint-prod1.lfr.cloud/documents/10591749/32979894/I-ET-3010.00-1200-251-P4X-001_F.pdf
+
+
+Histórico de alterações:
+- 2025 04 17 Versão 0.0.1: Implantação.
+- 2025 09 30 Versão 0.0.2: Ajustes finos.
+"""
+
 import PyPDF2
 import argparse
-import bs4
 import datetime
-import getpass
 import os
 import pathlib
 import pkg_resources
 import platform
 import psutil
 import re
-import requests
 import socket
-import subprocess
 import sys
 import time
 import tkinter
 import traceback
-import urllib3
 import winsound
 from tkinter import scrolledtext
 from tkinter import messagebox
@@ -124,6 +164,16 @@ bibliotecas = [
     "warnings",
     "winsound",
 ]
+#
+#  Especificacao "REQUIREMENTS FOR BOLTING MATERIALS" disponivel em:
+#
+#  https://canalfornecedor.petrobras.com.br/en/regras-de-contratacao/catalogo-de-padronizacao
+#  
+#  FPSO -> Own EEP - Basic Project All Electric 225kbpd / Own EEP - Basic Project for Revitalization -> Static Equipment 
+#
+#  Download direto aqui:
+#  https://webserver-petrobrasecossistemaint-prod1.lfr.cloud/documents/10591749/32979894/I-ET-3010.00-1200-251-P4X-001_F.pdf?download=true
+#
 
 # Definição dos materiais proibidos => norma:padrao
 normas = {
@@ -353,127 +403,6 @@ def dados_sistema():
 
     print()
     return
-
-
-def verificar_vpn_cisco():
-    """
-    Verifica o status da VPN Cisco usando o programa vpncli.exe.
-
-    :return: True se a VPN estiver conectada, False caso contrário.
-    """
-    try:
-        # Executa o programa vpncli.exe para verificar o status da VPN Cisco
-        resultado = subprocess.run(
-            [
-             "C:\\Program Files (x86)\\Cisco\\Cisco Secure Client\\vpncli.exe",
-             "state",
-            ],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        # Verifica se a saída contém as palavras "Connected" ou "Conectado"
-        if "Connected" in resultado.stdout or "Conectado" in resultado.stdout:
-            return True
-        return False
-    except Exception as e:
-        print("001 - Erro ao obter variaveis do ambiente.")
-        print(f"{e}")
-        return False
-
-
-def verificar_vpn_windows():
-    """
-    Verifica o status das conexões VPN no Windows usando o PowerShell.
-
-    :return: True se alguma VPN estiver conectada, False caso contrário.
-    """
-    try:
-        # Executa o comando para listar as conexões VPN via powershell
-        resultado = subprocess.run(
-            ["powershell", "-Command", "Get-VpnConnection"],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        # Verifica se alguma VPN está conectada
-        if "Connected" in resultado.stdout or "Conectado" in resultado.stdout:
-            return True
-        return False
-    except Exception as e:
-        print("002 - Erro ao obter variaveis do ambiente.")
-        print(f"{e}")
-        return False
-
-
-def obter_dados_usuario():
-    """
-    Obtém dados do usuário a partir de um serviço web interno e retorna nome, 
-    chave, matrícula e lotação.
-
-    :return: Tuple contendo nome, chave, matrícula e lotação do usuário.
-    """
-    # Obtem a chave do usuario
-    chave = getpass.getuser()
-
-    # Desabilitar avisos de segurança do urllib3, estamos rodando sem 
-    # certificado
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-    # Montar a URL com a chave do usuário para pesquisar os dados
-    url = (
-         "https://localizadorpessoas.petrobras.com.br/lope/busca/"
-        f"resultados.do?filtered=true&cleanAll=false&unico={chave}"
-    )
-
-    # Captura as configurações de proxy do sistema
-    proxies = {
-        "http": os.environ.get("http_proxy"),
-        "https": os.environ.get("https_proxy"),
-    }
-
-    # Verificar conexão e faz a requisição HTTP
-    try:
-        response = requests.get(
-            url, proxies=proxies, verify=False, cert=None, timeout=30
-        )
-        response.raise_for_status()
-    except Exception as e:
-        print("003 - Erro ao obter dados para a execucao.")
-        print(f"{e}")
-
-    # Fazer a requisição HTTP novamente para obter o conteúdo
-    response = requests.get(url, verify=False, cert=None)
-
-    # Parsear o HTML retornado
-    soup = bs4.BeautifulSoup(response.content, "html.parser")
-
-    # Localizar e extrair nome do usuário
-    nome = soup.find("h3")
-    if nome:
-        nome = nome.text.strip().title()
-    else:
-        print("004 - Nome do usuário não encontrado.")
-        nome = None
-
-    # Obter a matrícula
-    matricula_div = soup.find("div", string=lambda t: t and "Matrícula:" in t)
-    if matricula_div:
-        matricula = matricula_div.find_next_sibling("div").text.strip()
-    else:
-        print("005 - Matrícula do usuário não encontrada.")
-        matricula = None
-
-    # Localizar e extrair a lotação do
-    lotacao_div = soup.find("a", href=lambda t: t and "lotacao=" in t)
-    if lotacao_div:
-        lotacao = lotacao_div.text.strip()
-    else:
-        print("006 - Lotação do usuário não encontrada.")
-        lotacao = None
-
-    return nome, chave, matricula, lotacao
-
 
 def buscar_parafusos(texto, page_num, linha_num):
     """
@@ -877,19 +806,13 @@ def main(args_str=None, selected_folder=None):
 
         dados_sistema()
 
-        # Sem VPN ligada nao posso rodar
-        if verificar_vpn_cisco() or verificar_vpn_windows():
-            pass
-        else:
-            mensagem_erro = "008 - VPN desconectada, conecte-se e tente novamente."
-            print(mensagem_erro)
-            tkinter.messagebox.showerror("Erro no processamento...", mensagem_erro)
-            return
-
         print("Iniciando o processamento...")
 
         caminho_atual = pathlib.Path.cwd()
         print(f"O diretório atual é: {caminho_atual}")
+        if not os.access(caminho_atual, os.W_OK):
+            print(f"Atenção: Sem acesso para gravação no diretório atual '{caminho_atual}', logs podem não ser disponibilizados.")
+            return
         print(f"O diretório a ser processado é: {diretorio_processamento}")
 
         # Executa o programa propriamente dito.
@@ -937,13 +860,6 @@ def main(args_str=None, selected_folder=None):
 
         if not janela_ativa:
             break
-
-        # Dados do usuario que executou o programa
-        nome, chave, matricula, lotacao = obter_dados_usuario()
-
-        if nome and chave and matricula and lotacao:
-            print(f"Executado por {nome} - Chave: {chave} - Matrícula: {matricula}")
-            print(f"{lotacao}")
 
         # Mensagem de fim de processamento
         print(
