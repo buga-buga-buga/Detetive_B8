@@ -1,7 +1,7 @@
 VSVersionInfo(
     ffi=FixedFileInfo(
-        filevers=(0, 0, 0, 1),
-        prodvers=(0, 0, 0, 1),
+        filevers=(0, 0, 0, 3),
+        prodvers=(0, 0, 0, 3),
         mask=0x3f,
         flags=0x0,
         OS=0x40004,
@@ -15,11 +15,11 @@ VSVersionInfo(
                 u'040904B0',
                 [StringStruct(u'CompanyName', u'Petrobras'),
                  StringStruct(u'FileDescription', u'Localiza itens proibidos'),
-                 StringStruct(u'FileVersion', u'0.01'),
+                 StringStruct(u'FileVersion', u'0.03'),
                  StringStruct(u'InternalName', u'Procura_B8'),
                  StringStruct(u'LegalCopyright', u'© 2025 - BUZIOS/PPO/IPO/IEEI'),
                  StringStruct(u'ProductName', u'Procura_B8.exe'),
-                 StringStruct(u'ProductVersion', u'0.02')])
+                 StringStruct(u'ProductVersion', u'0.03')])
         ]),
         VarFileInfo([VarStruct(u'Translation', [1033, 1200])])
     ]

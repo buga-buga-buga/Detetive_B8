@@ -1,4 +1,3 @@
-
 """
 splash_screen.py
 
@@ -17,6 +16,7 @@ Sobre a saída:
 Histórico de alterações:
 - 2025 04 17 Versão 0.0.1: Implantação.
 - 2025 10 01 Versão 0.0.2: Inclui cabeçalho na imagem com o nome do "programa".
+- 2025 10 22 Versão 0.0.3: Ajustes para montar pacote executavel.
 """
 
 from PIL import Image, ImageTk

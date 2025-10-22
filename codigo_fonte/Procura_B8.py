@@ -41,6 +41,7 @@ ou download direto aqui:
 Histórico de alterações:
 - 2025 04 17 Versão 0.0.1: Implantação.
 - 2025 09 30 Versão 0.0.2: Ajustes finos.
+- 2025 10 22 Versão 0.0.3: Ajustes para montar pacote executavel.
 """
 
 import PyPDF2
@@ -58,8 +59,10 @@ import time
 import tkinter
 import traceback
 import winsound
+import importlib.metadata
 from tkinter import scrolledtext
 from tkinter import messagebox
+
 
 #
 # O grande barato é deixar a tela aberta sempre quando o programa estiver 
@@ -163,6 +166,7 @@ bibliotecas = [
     "urllib3",
     "warnings",
     "winsound",
+    "metadata",
 ]
 #
 #  Especificacao "REQUIREMENTS FOR BOLTING MATERIALS" disponivel em:
@@ -329,29 +333,45 @@ def exibir_versoes_bibliotecas(bibliotecas):
     """
     Exibe as versões das bibliotecas especificadas e lista as que não foram
       encontradas.
+    
+    Tenta com pkg_resources, depois importlib.metadata, e por fim tenta 
+    acessar __version__ diretamente.
 
     :param bibliotecas: Lista de nomes de bibliotecas a serem verificadas.
-    """
-    # Lista para armazenar bibliotecas não encontradas
+    """    
+    # Lista para armazenar bibliotecas não encontradas    
     nao_encontradas = []
 
+    #  
     for biblioteca in bibliotecas:
-        try:
+        versao = None
     # Tenta obter a versão da biblioteca usando pkg_resources
+        try:
             versao = pkg_resources.get_distribution(biblioteca).version
-            print(f" - {biblioteca}: {versao}")
+    # Não achou vamos de plano B pelo importlib.metadata            
         except pkg_resources.DistributionNotFound:
-    # Adiciona a biblioteca à lista de não encontradas se não for encontrada
-            nao_encontradas.append(biblioteca)
+            try:
+                versao = importlib.metadata.version(biblioteca)
+    # Plano C, tenta importar o módulo e acessar __version__ diretamente
+            except importlib.metadata.PackageNotFoundError:
+                try:
+                    modulo = importlib.import_module(biblioteca)
+                    versao = getattr(modulo, '__version__', None)
+                    # é, não achei mesmo...                    
+                    if versao is None:
+                        nao_encontradas.append(biblioteca)
+                except Exception:
+                    nao_encontradas.append(biblioteca)
+    # Se a versão foi encontrada, display da biblioteca e a versao
+        if versao:
+            print(f" - {biblioteca}: {versao}")
 
     if nao_encontradas:
-    # Converte a lista de não encontradas em uma string separada por vírgulas
+    # Converte a lista de não encontradas em uma string separada por vírgulas        
         nao_encontradas_str = ", ".join(nao_encontradas)
         print()
-        print(
-             "  Bibliotecas não encontradas ou embutidas no Python: "
-            f"{nao_encontradas_str}"
-        )
+        print("  Bibliotecas não encontradas ou embutidas no pacote:")
+        print(f"  {nao_encontradas_str}")
 
 
 def dados_sistema():
@@ -393,10 +413,6 @@ def dados_sistema():
     print(f"  Versão: {sys.version.split()[0]}")
     print(f"  Compilação: {' '.join(sys.version.split()[1:])}")
     print(f"  Executável: {sys.executable}")
-    print("  Caminhos de pesquisa do módulo:")
-    for path in sys.path:
-        print(f"    {path}")
-
     print()
     print(f"Versão das bibliotecas: ")
     exibir_versoes_bibliotecas(bibliotecas)
@@ -545,7 +561,7 @@ def processar_pdfs_no_diretorio(diretorio):
             tamanho_arquivo_mb = tamanho_arquivo_bytes / (1024 * 1024)
             print(
                 f"**Processando o arquivo: {contador_pdfs} de {total_arquivos}"
-                 f"** {nome_arquivo}"
+                 f" ** {nome_arquivo}"
             )
             # força envio da mensagem pra tela, pro usuario saber que mudou 
             # de arquivo e nao ficar desesperado achando que travou
@@ -575,7 +591,7 @@ def processar_pdfs_no_diretorio(diretorio):
                         # Obtém o objeto da página corrente
                         page_obj = pdf_reader.pages[page_num]
                         if d_on:
-                            print(f"** Lendo página {page_num+1} de"
+                            print(f"** Lendo página {page_num+1} de "
                                   f"{total_paginas} **")
                         try:
                             # Extrai o texto da página
@@ -791,14 +807,18 @@ def main(args_str=None, selected_folder=None):
 
         # Exibir os argumentos recebidos
         print("Argumentos recebidos:")
+        print()
         print(f"Modo de depuração (debug): {'Ativado' if d_on else 'Desativado'}")
         print(f"Aviso sonoro: {'Ativado' if som else 'Desativado'}")
+        print()
+        print(f"Diretório atual:", os.getcwd())
         print(f"Diretório a ser processado: {diretorio_processamento}")
+
 
         # Verifique se o diretório existe
         if not os.path.isdir(diretorio_processamento):
             mensagem_erro = (
-                f"007 - Erro: O diretório '{diretorio_processamento}' não existe."
+                f"001 - Erro: O diretório '{diretorio_processamento}' não existe."
             )
             print(mensagem_erro)
             tkinter.messagebox.showerror("Erro no processamento...", mensagem_erro)

@@ -26,11 +26,8 @@ Referências:
 Histórico de alterações:
 - 2025 04 17 Versão 0.0.1: Implantação.
 - 2025 10 01 Versão 0.0.2: Inclui link para a especificacao da Petrobras.
+- 2025 10 22 Versão 0.0.3: Ajustes para montar pacote executavel.
 """
-
-
-# pyinstaller --windowed --name "procura_B8" --icon="logo.ico" --add-data "logo.png;." --version-file="version.rc" --upx-dir=. tela_principal.py
-#
 
 import splash_screen
 import procura_B8
@@ -220,7 +217,7 @@ ou download direto aqui:
     exit_button.pack(side='right', padx=(0, 10))  # Alinhamento total à direita com padding
 
     # Versão alinhada com os botões
-    version_label = tkinter.Label(main_frame, text="Versão 0.02", anchor='w')
+    version_label = tkinter.Label(main_frame, text="Versão 0.03", anchor='w')
     version_label.pack(fill='x', padx=1, pady=(5, 0))
 
     root.mainloop()
